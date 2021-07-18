@@ -1,0 +1,31 @@
+version: "3"
+services:
+  db:
+    container_name: evaluation-database
+    image: postgres:alpine
+    ports:
+      - "5430:5432"
+    volumes:
+    - ./data/db:/var/lib/postgresql/data
+    env_file:
+      - ./.env.db
+    restart: always
+
+  evaluation-system:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: evaluation-system
+    depends_on:
+      - db
+    links:
+      - db
+    env_file:
+      - ./.env.db
+      - ./.env.local
+    command: >
+      bash -c "python manage.py makemigrations
+      && python manage.py migrate
+      && python manage.py runserver 0.0.0.0:8000"
+    restart: always
+
